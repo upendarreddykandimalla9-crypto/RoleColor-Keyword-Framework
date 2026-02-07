@@ -1,0 +1,6 @@
+Software Engineer with 4 years of experience building backend systems and automation tools.
+
+- Designed scalable APIs and contributed to overall system architecture
+- Worked closely with cross-functional teams and product stakeholders
+- Improved reliability through monitoring, documentation, and refactoring
+- Built automation to improve system stability and uptime
