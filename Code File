@@ -1,0 +1,102 @@
+
+---
+
+## 2) Code file: `rcai_score.py`
+```python
+import re
+import argparse
+from collections import Counter
+
+ROLECOLORS = ["Builder", "Thriver", "Enabler", "Supportee"]
+
+KEYWORDS = {
+    "Builder": [
+        "strategy", "vision", "roadmap", "architecture", "scalable",
+        "innovation", "modernization", "optimization", "platform", "system"
+    ],
+    "Thriver": [
+        "fast-paced", "deadline", "urgent", "ownership", "deliver",
+        "execution", "turnaround", "ambiguity", "sprint", "resilient"
+    ],
+    "Enabler": [
+        "collaboration", "cross-functional", "stakeholder", "alignment",
+        "communication", "coordination", "partner", "facilitate",
+        "influence", "mentorship"
+    ],
+    "Supportee": [
+        "reliability", "stability", "monitoring", "documentation", "testing",
+        "maintenance", "refactoring", "uptime", "quality", "runbook"
+    ],
+}
+
+def tokenize(text: str):
+    # words + hyphenated terms (cross-functional, fast-paced)
+    return re.findall(r"[a-z]+(?:-[a-z]+)?", text.lower())
+
+def score_resume(resume_text: str):
+    tokens = tokenize(resume_text)
+    counts = Counter(tokens)
+
+    raw = {role: 0 for role in ROLECOLORS}
+    for role in ROLECOLORS:
+        raw[role] = sum(counts.get(k, 0) for k in KEYWORDS[role])
+
+    total = sum(raw.values())
+    if total == 0:
+        return {role: 0.0 for role in ROLECOLORS}
+
+    return {role: raw[role] / total for role in ROLECOLORS}
+
+def dominant_role(scores: dict):
+    return max(scores, key=scores.get)
+
+def rewrite_summary(dominant: str) -> str:
+    templates = {
+        "Builder": [
+            "Strategic software engineer focused on scalable architecture and long-term platform thinking.",
+            "Experienced in designing systems that support growth, performance, and maintainability.",
+            "Strong at turning requirements into clear technical direction and sound design decisions.",
+            "Builder mindset: balance innovation, scalability, and reliability to create durable foundations.",
+        ],
+        "Thriver": [
+            "Execution-driven engineer who thrives in fast-paced environments with tight deadlines.",
+            "Known for taking ownership, delivering quickly, and navigating ambiguity under pressure.",
+            "Skilled at rapid iteration, issue resolution, and maintaining momentum during critical work.",
+            "Thriver mindset: resilience, urgency, and dependable delivery when timelines are challenging.",
+        ],
+        "Enabler": [
+            "Collaborative engineer who aligns cross-functional teams and turns needs into clear execution plans.",
+            "Strong communicator skilled at stakeholder alignment and translating requirements into action.",
+            "Known for facilitating decisions, mentoring peers, and improving team effectiveness.",
+            "Enabler mindset: connect people, reduce friction, and drive shared outcomes.",
+        ],
+        "Supportee": [
+            "Reliability-focused engineer committed to stability, maintainability, and operational excellence.",
+            "Experienced in improving quality through monitoring, documentation, testing, and refactoring.",
+            "Known for strengthening uptime, reducing risk, and building repeatable support processes.",
+            "Supportee mindset: consistency, prevention, and keeping critical services healthy over time.",
+        ],
+    }
+    return "\n".join(templates[dominant])
+
+def main():
+    parser = argparse.ArgumentParser(description="RoleColorAI resume scoring prototype")
+    parser.add_argument("--resume", type=str, required=True, help="Path to resume text file")
+    args = parser.parse_args()
+
+    with open(args.resume, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    scores = score_resume(text)
+    dom = dominant_role(scores)
+
+    print("RoleColor score distribution:")
+    for role in sorted(scores, key=scores.get, reverse=True):
+        print(f"{role}: {scores[role]:.2f}")
+
+    print("\nDominant RoleColor:", dom)
+    print("\nRewritten Summary:\n")
+    print(rewrite_summary(dom))
+
+if __name__ == "__main__":
+    main()
